@@ -14,17 +14,18 @@ function load() {
 
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas });
     renderer.setSize( renderer.domElement.clientWidth, renderer.domElement.clientHeight );
+    renderer.setPixelRatio(window.devicePixelRatio);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.maxDistance = 30
     controls.minDistance = 10.5;
     controls.listenToKeyEvents(window);
-    controls.keys = {
+    /*controls.keys = {
         LEFT: 'ArrowLeft',
         UP: 'ArrowUp',
         RIGHT: 'ArrowRight',
         BOTTOM: 'ArrowDown'
-    }
+    }*/
 
     window.addEventListener('resize', () => {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -35,24 +36,25 @@ function load() {
     let daymap = new THREE.TextureLoader().load("/earth_daymap.jpg");
     daymap.colorSpace = THREE.SRGBColorSpace;
     daymap.magFilter = THREE.NearestFilter;
-    let normalmap = new THREE.TextureLoader().load("/earth_normal_map.jpg");
+    let bumpmap = new THREE.TextureLoader().load("/earth_bumpmap.jpg");
     let specularmap = new THREE.TextureLoader().load("/2k_earth_specular_map.jpg");
     let metalmap = new THREE.TextureLoader().load("/earth_metal_map.jpg");
-    let earth_geometry = new THREE.IcosahedronGeometry(10,15);
+    let earth_geometry = new THREE.IcosahedronGeometry(10,10);
     let earth_material = new THREE.MeshStandardMaterial({
         map: daymap,
-        normalMap: normalmap,
+        bumpMap: bumpmap,
+        bumpScale: 0.25,
         roughnessMap: specularmap,
         roughness: 0.8,
         metalnessMap: metalmap,
-        metalness: 0.4
+        metalness: 0.2
     });
     let earth_mesh = new THREE.Mesh(earth_geometry, earth_material);
     scene.add(earth_mesh);
 
     let cloudsmap = new THREE.TextureLoader().load("/earth_clouds.jpg");
     cloudsmap.magFilter = THREE.NearestFilter;
-    let clouds_geometry = new THREE.IcosahedronGeometry(10.01,15);
+    let clouds_geometry = new THREE.IcosahedronGeometry(10.025,10);
     let clouds_material = new THREE.MeshStandardMaterial({
         map: cloudsmap,
         transparent: true,
@@ -86,11 +88,15 @@ function load() {
     box.position.set(pos.x, pos.y, pos.z);
     earth_mesh.add(box);
 
+    let time = 0;
+
     function animate() {
+        document.getElementById("timescale-filled").style.width = String(time)+"%";
+        time < 100 ? time+= 0.025 : time = 100;
         controls.update();
 
         earth_mesh.rotateY(0.001);
-        clouds_mesh.rotateY(0.00035);
+        clouds_mesh.rotateY(0.00025);
 
         requestAnimationFrame( animate );
 	    renderer.render( scene, camera );
