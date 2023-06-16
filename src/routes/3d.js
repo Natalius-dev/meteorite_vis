@@ -11,38 +11,55 @@ function lat_long(lat, long, rho) {
 let time = 0;
 
 function load() {
+    const canvas = document.getElementById("3d");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera( 60, canvas.clientWidth / canvas.clientHeight, 0.01, 1500 );
 
     THREE.DefaultLoadingManager.onLoad = () => {
         document.getElementById("3d").classList.remove("opacity-0");
         document.getElementById("start-btn").disabled = false;
         document.getElementById("start-btn").innerHTML = "Start Visualisation";
-        document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-50", "active:text-gray-300");
+        if(canvas.clientWidth > 425) {
+            document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-50", "active:text-gray-300");
+            camera.position.setZ(15);
+            camera.position.setY(5);
+        } else {
+            document.getElementById("start-btn").classList.add("underline", "active:scale-50", "active:text-gray-300");
+            camera.position.setZ(35);
+            camera.position.setY(10);
+        }
         time = 0;
     };
-
-    const canvas = document.getElementById("3d");
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera( 60, canvas.clientWidth / canvas.clientHeight, 0.01, 1500 );
 
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas });
     renderer.setSize( renderer.domElement.clientWidth, renderer.domElement.clientHeight );
     renderer.setPixelRatio(window.devicePixelRatio);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
-    controls.maxDistance = 30;
+    // Phones can zoom out more
+    if(canvas.clientWidth > 425) {
+        controls.maxDistance = 30;
+    } else {
+        controls.maxDistance = 50;
+    }
+    console.log(controls.maxDistance);
     controls.minDistance = 10.5;
     controls.listenToKeyEvents(window);
-    /*controls.keys = {
-        LEFT: 'ArrowLeft',
-        UP: 'ArrowUp',
-        RIGHT: 'ArrowRight',
-        BOTTOM: 'ArrowDown'
-    }*/
 
     window.addEventListener('resize', () => {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize( canvas.clientWidth, canvas.clientHeight );
+        // Responsive design
+        if(canvas.clientWidth > 425) {
+            controls.maxDistance = 30;
+            document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125");
+            document.getElementById("start-btn").classList.remove("underline");
+        } else {
+            controls.maxDistance = 50;
+            document.getElementById("start-btn").classList.add("underline");
+            document.getElementById("start-btn").classList.remove("hover:cursor-pointer", "hover:scale-125");
+        }
     });
 
     let daymap = new THREE.TextureLoader().load("/earth_daymap.jpg");
@@ -131,9 +148,6 @@ function load() {
     let stars_geometry = new THREE.SphereGeometry(1000, 64, 32);
     let stars_mesh = new THREE.Mesh(stars_geometry, stars_material);
     scene.add(stars_mesh);
-
-    camera.position.setZ(15);
-    camera.position.setY(5);
 
     // earth tilt
     earth_mesh.rotation.x = 0.4101524;
