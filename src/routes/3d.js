@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import * as dat from "./dat.gui";
 
 function lat_long(lat, long, rho) {
     let latitude = (lat)*Math.PI/180;
@@ -7,10 +8,21 @@ function lat_long(lat, long, rho) {
     return new THREE.Vector3(rho*Math.cos(latitude)*Math.cos(longitude), rho*Math.sin(latitude), rho*Math.cos(latitude)*Math.sin(longitude));
 }
 
+let time = 0;
+
 function load() {
+
+    THREE.DefaultLoadingManager.onLoad = () => {
+        document.getElementById("3d").classList.remove("opacity-0");
+        document.getElementById("start-btn").innerHTML = "Start Visualisation";
+        document.getElementById("start-btn").disabled = false;
+        document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-110");
+        time = 0;
+    };
+
     const canvas = document.getElementById("3d");
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera( 75, canvas.clientWidth / canvas.clientHeight, 0.01, 1500 );
+    const camera = new THREE.PerspectiveCamera( 60, canvas.clientWidth / canvas.clientHeight, 0.01, 1500 );
 
     const renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas });
     renderer.setSize( renderer.domElement.clientWidth, renderer.domElement.clientHeight );
@@ -62,7 +74,52 @@ function load() {
     });
     let clouds_mesh = new THREE.Mesh(clouds_geometry, clouds_material);
     earth_mesh.add(clouds_mesh);
+/*
+    let atmosphere_data = {
+        cam_position: {
+            type: `vec4`,
+            value: new THREE.Vector4(Math.log10(controls.object.position.x), Math.log10(controls.object.position.y), Math.log10(controls.object.position.z), 1)
+        },
+        dist_pow: {
+            type: `f`,
+            value: 1.0
+        },
+        dist_divide: {
+            type: `f`,
+            value: 1.0
+        }
+    }
+    const gui = new dat.GUI();
+    gui.add(atmosphere_data.dist_pow, "value", 1, 200, 0.01);
+    gui.add(atmosphere_data.dist_divide, "value", 1, 1000000000000000, 0.11);
+    let atmosphere_geometry = new THREE.IcosahedronGeometry(10.05,10);
+    let atmosphere_material = new THREE.ShaderMaterial({
+        uniforms: atmosphere_data,
+        vertexShader: `
+            out vec4 pos;
 
+            void main() {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z, 1.0);
+                pos = modelMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec4 cam_position;
+            uniform float dist_pow;
+            uniform float dist_divide;
+            in vec4 pos;
+
+            void main() {
+                float dist = distance(cam_position-gl_FragDepth, pos+gl_FragDepth);
+                float color = mix(0.0, 1.0, pow(dist, dist_pow)/dist_divide);
+                gl_FragColor = vec4(0.776, 0.941, 1, color);
+            }
+        `,
+        transparent: true
+    });
+    let atmosphere_mesh = new THREE.Mesh(atmosphere_geometry, atmosphere_material);
+    earth_mesh.add(atmosphere_mesh);
+*/
     scene.add(new THREE.AmbientLight(0xffffff, 0.05));
     let sun = new THREE.PointLight(0xffffdd, 1);
     sun.position.setZ(400);
@@ -88,11 +145,14 @@ function load() {
     box.position.set(pos.x, pos.y, pos.z);
     earth_mesh.add(box);
 
-    let time = 0;
-
     function animate() {
+        //atmosphere_data.cam_position.value = new THREE.Vector4(controls.object.position.x, controls.object.position.y, controls.object.position.z, 1);
+        //console.log(atmosphere_data.cam_position.value);
         document.getElementById("timescale-filled").style.width = String(time)+"%";
         time < 100 ? time+= 0.025 : time = 100;
+        if(!document.getElementById("overlay").classList.contains("scale-y-0")) {
+            time = 0;
+        }
         controls.update();
 
         earth_mesh.rotateY(0.001);
