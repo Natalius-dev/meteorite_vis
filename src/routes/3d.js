@@ -16,7 +16,7 @@ function load() {
         document.getElementById("3d").classList.remove("opacity-0");
         document.getElementById("start-btn").disabled = false;
         document.getElementById("start-btn").innerHTML = "Start Visualisation";
-        document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-110");
+        document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-50", "active:text-gray-300");
         time = 0;
     };
 
@@ -28,7 +28,6 @@ function load() {
     renderer.setSize( renderer.domElement.clientWidth, renderer.domElement.clientHeight );
     renderer.setPixelRatio(window.devicePixelRatio);
     const controls = new OrbitControls(camera, renderer.domElement);
-    //controls.rotateSpeed = 0.01;
     controls.enablePan = false;
     controls.maxDistance = 30;
     controls.minDistance = 10.5;
