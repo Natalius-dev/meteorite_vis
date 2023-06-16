@@ -3,6 +3,22 @@
     import { onMount } from "svelte";
 
     onMount(() => {
+        let dots = 3;
+        const button = document.getElementById("start-btn");
+            setInterval(() => {
+                if(button.disabled === true) {
+                    // moving dots on "Loading..."
+                    dots++;
+                    if(dots > 3) {
+                        dots = 1;
+                        button.innerHTML = "Loading.";
+                    } else {
+                        button.innerHTML += ".";
+                    }
+                } else {
+                    button.innerHTML = "Start Visualisation"
+                }
+            }, 500);
         load();
     });
 

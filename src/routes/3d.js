@@ -14,8 +14,8 @@ function load() {
 
     THREE.DefaultLoadingManager.onLoad = () => {
         document.getElementById("3d").classList.remove("opacity-0");
-        document.getElementById("start-btn").innerHTML = "Start Visualisation";
         document.getElementById("start-btn").disabled = false;
+        document.getElementById("start-btn").innerHTML = "Start Visualisation";
         document.getElementById("start-btn").classList.add("hover:cursor-pointer", "hover:scale-125", "active:scale-110");
         time = 0;
     };
@@ -28,8 +28,9 @@ function load() {
     renderer.setSize( renderer.domElement.clientWidth, renderer.domElement.clientHeight );
     renderer.setPixelRatio(window.devicePixelRatio);
     const controls = new OrbitControls(camera, renderer.domElement);
+    //controls.rotateSpeed = 0.01;
     controls.enablePan = false;
-    controls.maxDistance = 30
+    controls.maxDistance = 30;
     controls.minDistance = 10.5;
     controls.listenToKeyEvents(window);
     /*controls.keys = {
@@ -154,6 +155,9 @@ function load() {
             time = 0;
         }
         controls.update();
+
+        // set rotate speed according to zoom range (10.5 - 30) ⇒ (0.05 - 1)
+        controls.rotateSpeed = 0.05*(1-((controls.getDistance()-10.5)/(30-10.5)))+1*((controls.getDistance()-10.5)/(30-10.5));
 
         earth_mesh.rotateY(0.001);
         clouds_mesh.rotateY(0.00025);
