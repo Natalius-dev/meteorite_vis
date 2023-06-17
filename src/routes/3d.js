@@ -169,8 +169,8 @@ function load() {
         }
         controls.update();
 
-        // set rotate speed according to zoom range (10.5 - 30) ⇒ (0.05 - 1)
-        controls.rotateSpeed = 0.05*(1-((controls.getDistance()-10.5)/(30-10.5)))+1*((controls.getDistance()-10.5)/(30-10.5));
+        // set rotate speed according to zoom range (10.5 - 30 or 50) ⇒ (0.05 - 1)
+        controls.rotateSpeed = 0.05*(1-((controls.getDistance()-10.5)/(controls.maxDistance-10.5)))+1*((controls.getDistance()-10.5)/(controls.maxDistance-10.5));
 
         earth_mesh.rotateY(0.001);
         clouds_mesh.rotateY(0.00025);
