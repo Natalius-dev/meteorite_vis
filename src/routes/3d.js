@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import * as dat from "./dat.gui";
 
 function lat_long(lat, long, rho) {
     let latitude = (lat)*Math.PI/180;
@@ -42,7 +41,6 @@ function load() {
     } else {
         controls.maxDistance = 50;
     }
-    console.log(controls.maxDistance);
     controls.minDistance = 10.5;
     controls.listenToKeyEvents(window);
 
@@ -97,18 +95,15 @@ function load() {
             type: `vec4`,
             value: new THREE.Vector4(Math.log10(controls.object.position.x), Math.log10(controls.object.position.y), Math.log10(controls.object.position.z), 1)
         },
-        dist_pow: {
+        zoom_level: {
             type: `f`,
-            value: 1.0
+            value: controls.getDistance()
         },
-        dist_divide: {
+        max_zoom: {
             type: `f`,
-            value: 1.0
+            value: controls.maxDistance
         }
     }
-    const gui = new dat.GUI();
-    gui.add(atmosphere_data.dist_pow, "value", 1, 200, 0.01);
-    gui.add(atmosphere_data.dist_divide, "value", 1, 1000000000000000, 0.11);
     let atmosphere_geometry = new THREE.IcosahedronGeometry(10.05,10);
     let atmosphere_material = new THREE.ShaderMaterial({
         uniforms: atmosphere_data,
@@ -122,14 +117,14 @@ function load() {
         `,
         fragmentShader: `
             uniform vec4 cam_position;
-            uniform float dist_pow;
-            uniform float dist_divide;
+            uniform float zoom_level;
+            uniform float max_zoom;
             in vec4 pos;
 
             void main() {
                 float dist = distance(cam_position-gl_FragDepth, pos+gl_FragDepth);
-                float color = mix(0.0, 1.0, pow(dist, dist_pow)/dist_divide);
-                gl_FragColor = vec4(0.776, 0.941, 1, color);
+                float color = mix(0.0, 1.0, pow(dist, 10.0)/750000000000000.0);
+                gl_FragColor = vec4(0.776, 0.941, 1, mix(10.5, max_zoom, (color - 10.5)/(max_zoom - 10.5)));
             }
         `,
         transparent: true
