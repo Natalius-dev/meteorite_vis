@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 upload_ftp.sh
 /.firebase
 /functions
+firebase-debug.log
