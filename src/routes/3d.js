@@ -66,7 +66,7 @@ function load() {
     let bumpmap = new THREE.TextureLoader().load("/earth_bumpmap.jpg");
     let specularmap = new THREE.TextureLoader().load("/2k_earth_specular_map.jpg");
     let metalmap = new THREE.TextureLoader().load("/earth_metal_map.jpg");
-    let earth_geometry = new THREE.IcosahedronGeometry(10,10);
+    let earth_geometry = new THREE.IcosahedronGeometry(10,15);
     let earth_material = new THREE.MeshStandardMaterial({
         map: daymap,
         bumpMap: bumpmap,
@@ -81,7 +81,7 @@ function load() {
 
     let cloudsmap = new THREE.TextureLoader().load("/earth_clouds.jpg");
     cloudsmap.magFilter = THREE.NearestFilter;
-    let clouds_geometry = new THREE.IcosahedronGeometry(10.025,10);
+    let clouds_geometry = new THREE.IcosahedronGeometry(10.025,15);
     let clouds_material = new THREE.MeshStandardMaterial({
         map: cloudsmap,
         transparent: true,
@@ -89,53 +89,47 @@ function load() {
     });
     let clouds_mesh = new THREE.Mesh(clouds_geometry, clouds_material);
     earth_mesh.add(clouds_mesh);
-/*
-    let atmosphere_data = {
-        cam_position: {
-            type: `vec4`,
-            value: new THREE.Vector4(Math.log10(controls.object.position.x), Math.log10(controls.object.position.y), Math.log10(controls.object.position.z), 1)
-        },
-        zoom_level: {
-            type: `f`,
-            value: controls.getDistance()
-        },
-        max_zoom: {
-            type: `f`,
-            value: controls.maxDistance
-        }
-    }
-    let atmosphere_geometry = new THREE.IcosahedronGeometry(10.05,10);
-    let atmosphere_material = new THREE.ShaderMaterial({
-        uniforms: atmosphere_data,
-        vertexShader: `
-            out vec4 pos;
 
-            void main() {
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z, 1.0);
-                pos = modelMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform vec4 cam_position;
-            uniform float zoom_level;
-            uniform float max_zoom;
-            in vec4 pos;
-
-            void main() {
-                float dist = distance(cam_position-gl_FragDepth, pos+gl_FragDepth);
-                float color = mix(0.0, 1.0, pow(dist, 10.0)/750000000000000.0);
-                gl_FragColor = vec4(0.776, 0.941, 1, mix(10.5, max_zoom, (color - 10.5)/(max_zoom - 10.5)));
-            }
-        `,
-        transparent: true
-    });
-    let atmosphere_mesh = new THREE.Mesh(atmosphere_geometry, atmosphere_material);
-    earth_mesh.add(atmosphere_mesh);
-*/
     scene.add(new THREE.AmbientLight(0xffffff, 0.05));
     let sun = new THREE.PointLight(0xffffdd, 1);
     sun.position.setZ(400);
     scene.add(sun);
+
+    //https://discourse.threejs.org/t/how-to-create-an-atmospheric-glow-effect-on-surface-of-globe-sphere/32852/3
+    
+    let atmosphere_geometry = new THREE.IcosahedronGeometry(10*1.09,15);
+    let atmosphere_material = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.clone({}),
+        vertexShader: `
+            varying vec3 vNormal;
+            varying vec3 vPosition;
+
+            void main() {
+                vNormal = normalize( normalMatrix * normal );
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                vPosition = gl_Position.xyz;
+            }
+        `,
+        fragmentShader: `
+            varying vec3 vNormal;
+            varying vec3 vPosition;
+        
+            void main() {
+                vec3 lightPosition = vec3(0.0, 0.0, 10.0);
+                vec3 lightDirection = normalize(lightPosition - vPosition);
+                float dotNL = clamp(dot(lightDirection, vNormal), 0.5, 1.0);
+                float intensity = pow( 0.8 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 3.5 );
+                gl_FragColor = vec4( 0.5, 0.72, 0.9, 1.0 ) * intensity * dotNL * 2.0;
+            }
+        `,
+        transparent: true,
+        lights: false,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending
+    });
+    let atmosphere_mesh = new THREE.Mesh(atmosphere_geometry, atmosphere_material);
+    scene.add(atmosphere_mesh);
+    //console.log(atmosphere_mesh);
 
     let starsmap = new THREE.TextureLoader().load("/2k_stars_milky_way.jpg");
     starsmap.colorSpace = THREE.SRGBColorSpace;
